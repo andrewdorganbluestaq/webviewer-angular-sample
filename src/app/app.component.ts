@@ -1,6 +1,8 @@
-import { Component, ViewChild, OnInit, Output, EventEmitter, ElementRef, AfterViewInit } from '@angular/core';
-import { Subject } from 'rxjs';
-import WebViewer, { WebViewerInstance } from '@pdftron/webviewer';
+import {Component, ViewChild, OnInit, Output, EventEmitter, ElementRef, AfterViewInit} from '@angular/core';
+import {Subject} from 'rxjs';
+import WebViewer, {WebViewerInstance} from '@pdftron/webviewer';
+import {MatDialog} from '@angular/material/dialog';
+import {DialogComponent} from './dialog';
 
 @Component({
   selector: 'app-root',
@@ -10,11 +12,11 @@ import WebViewer, { WebViewerInstance } from '@pdftron/webviewer';
 export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('viewer') viewer: ElementRef;
   wvInstance: WebViewerInstance;
-  @Output() coreControlsEvent:EventEmitter<string> = new EventEmitter(); 
+  @Output() coreControlsEvent: EventEmitter<string> = new EventEmitter();
 
   private documentLoaded$: Subject<void>;
 
-  constructor() {
+  constructor(private dialog: MatDialog) {
     this.documentLoaded$ = new Subject<void>();
   }
 
@@ -28,9 +30,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       this.coreControlsEvent.emit(instance.UI.LayoutMode.Single);
 
-      const { documentViewer, Annotations, annotationManager } = instance.Core;
+      const {documentViewer, Annotations, annotationManager} = instance.Core;
 
       instance.UI.openElements(['notesPanel']);
+
+      this.wvInstance.UI.contextMenuPopup.update([
+        {
+          type: 'actionButton',
+          title: 'Create New Object',
+          img: './assets/pdftron.ico',
+          onClick: () => this.dialog.open(DialogComponent)
+        }
+      ]);
 
       documentViewer.addEventListener('annotationsLoaded', () => {
         console.log('annotations loaded');
@@ -50,7 +61,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         annotationManager.addAnnotation(rectangleAnnot);
         annotationManager.redrawAnnotation(rectangleAnnot);
       });
-    })
+    });
   }
 
   ngOnInit() {
